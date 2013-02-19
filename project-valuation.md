@@ -101,39 +101,4 @@ ggplot(df.delta10, aes(var.name, delta10)) + geom_bar(stat = "identity") + coord
 # Now examine the change in benefits over a range of different inputs
 
 
-```r
-on.peak.rate.alt <- c(50, 60, 70, 80, 90, 100)
-load.shifting.periods.alt <- c(8, 9, 10, 11)
-expand.grid(on.peak.rate.alt = on.peak.rate.alt, load.shifting.periods.alt = load.shifting.periods.alt)
-```
-
-```
-##    on.peak.rate.alt load.shifting.periods.alt
-## 1                50                         8
-## 2                60                         8
-## 3                70                         8
-## 4                80                         8
-## 5                90                         8
-## 6               100                         8
-## 7                50                         9
-## 8                60                         9
-## 9                70                         9
-## 10               80                         9
-## 11               90                         9
-## 12              100                         9
-## 13               50                        10
-## 14               60                        10
-## 15               70                        10
-## 16               80                        10
-## 17               90                        10
-## 18              100                        10
-## 19               50                        11
-## 20               60                        11
-## 21               70                        11
-## 22               80                        11
-## 23               90                        11
-## 24              100                        11
-```
-
-
 

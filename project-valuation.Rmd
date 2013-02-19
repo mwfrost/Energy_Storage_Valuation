@@ -79,15 +79,13 @@ load.shifting.periods.alt <- c(8,9,10,11)
 
 alt.vars <- expand.grid("on.peak.rate.alt"=on.peak.rate.alt, "load.shifting.periods.alt"=load.shifting.periods.alt)
 
-alt.vars
-
-for(i in 1:length(alt.vars){
+for(i in 1:nrow(alt.vars)){
   alt.inputs <- inputs
-  alt.inputs$default['on.peak.rate']  <- alt.vars$on.peak.rate.alt[i]
-  alt.inputs$load.shifting.periods['default']  <- alt.vars$load.shifting.periods.alt[i]
+  alt.inputs['on.peak.rate','default']  <- alt.vars$on.peak.rate.alt[i]
+  alt.inputs['load.shifting.periods','default']  <- alt.vars$load.shifting.periods.alt[i]
   alt.vars$benefit[i] <- calc.benefits(alt.inputs) 
   }
-
+alt.vars
 
 ```
 
