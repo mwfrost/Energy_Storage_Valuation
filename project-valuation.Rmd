@@ -77,15 +77,18 @@ ggplot(df.delta10, aes(var.name, delta10)) + geom_bar(stat="identity") + coord_f
 on.peak.rate.alt <- c(50,60,70,80,90,100)
 load.shifting.periods.alt <- c(8,9,10,11)
 
-expand.grid("on.peak.rate.alt"=on.peak.rate.alt, "load.shifting.periods.alt"=load.shifting.periods.alt)
+alt.vars <- expand.grid("on.peak.rate.alt"=on.peak.rate.alt, "load.shifting.periods.alt"=load.shifting.periods.alt)
 
-calc.benefits(inputs)
+alt.vars
 
-for(i in 1:length(on.peak.rate.alt)){
+for(i in 1:length(alt.vars){
   alt.inputs <- inputs
-  alt.inputs['on.peak.rate','default']  <- on.peak.rate.alt[i]
-  print(paste( on.peak.rate.alt[i], calc.benefits(alt.inputs)))
+  alt.inputs$default['on.peak.rate']  <- alt.vars$on.peak.rate.alt[i]
+  alt.inputs$load.shifting.periods['default']  <- alt.vars$load.shifting.periods.alt[i]
+  alt.vars$benefit[i] <- calc.benefits(alt.inputs) 
   }
+
+
 ```
 
 
