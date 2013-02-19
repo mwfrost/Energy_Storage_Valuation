@@ -1,0 +1,91 @@
+Energy Storage Technology Valuation
+========================================================
+
+An R version of the method described in [Energy Storage Technology Valuation Primer](http://www.epri.com/abstracts/Pages/ProductAbstract.aspx?ProductId=000000000001008810) from EPRI.
+
+## Deterministic Model
+
+NPV is calculated in the `npv()` function in `func.r`
+
+Source [here](http://tolstoy.newcastle.edu.au/R/help/05/12/16765.html)
+
+   >t = c(-8000, 100, 100, 100, 2000, 3000, 4000, 5000)
+
+   >r = 0.1
+
+   >npv(r, t)
+
+   >[1] 301.1624
+
+
+```{r}
+require(plyr)
+require(ggplot2)
+source('~/Code/energy_projects/func.r')
+
+inputs <-data.frame(
+  default=c(
+  80,20,5,5,10,250,100000,2
+  )
+)
+
+row.names(inputs) <- c(
+    'on.peak.rate',
+    'off.peak.rate',
+    'demand.charge',
+    'capacity',
+    'load.shift.duration',
+    'load.shifting.periods',
+    'cost.per.volt.sag',
+    'volt.sag.count'
+    )
+inputs$var.name <- row.names(inputs)
+
+# From http://www.tybecenergy.com/pricehistory/pjm_settle.php
+on.peak.rate <- 44.40 # $
+off.peak.rate <- 31.13 # $
+
+
+b.total <- calc.benefits(inputs)
+
+sprintf("$%.f", b.total)
+```
+
+Now exercise the model for sensitivity analysis
+
+```{r figure.3-1}
+
+percent(exercise(inputs, 'capacity',1.10) / b.total - 1)
+percent(exercise(inputs, 'on.peak.rate',1.10) / b.total - 1)
+
+df.delta10 <- ddply(inputs, .(var.name), function(x){ 
+    c( delta10=(exercise(inputs, x$var.name, 1.10 )-b.total)/b.total
+       )
+     }
+  )
+
+df.delta10 <- transform(df.delta10, 
+                          var.name = reorder(var.name, delta10))
+
+ggplot(df.delta10, aes(var.name, delta10)) + geom_bar(stat="identity") + coord_flip() + scale_y_continuous(labels=percent, limits=c(-0.05,0.1))
+
+```
+
+# Now examine the change in benefits over a range of different inputs
+
+```{r}
+on.peak.rate.alt <- c(50,60,70,80,90,100)
+load.shifting.periods.alt <- c(8,9,10,11)
+
+expand.grid("on.peak.rate.alt"=on.peak.rate.alt, "load.shifting.periods.alt"=load.shifting.periods.alt)
+
+calc.benefits(inputs)
+
+for(i in 1:length(on.peak.rate.alt)){
+  alt.inputs <- inputs
+  alt.inputs['on.peak.rate','default']  <- on.peak.rate.alt[i]
+  print(paste( on.peak.rate.alt[i], calc.benefits(alt.inputs)))
+  }
+```
+
+
