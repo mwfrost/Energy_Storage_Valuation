@@ -210,6 +210,20 @@ hljs.initHighlightingOnLoad();
 <pre><code>## Loading required package: ggplot2
 </code></pre>
 
+<pre><code class="r">require(reshape)
+</code></pre>
+
+<pre><code>## Loading required package: reshape
+</code></pre>
+
+<pre><code>## Attaching package: &#39;reshape&#39;
+</code></pre>
+
+<pre><code>## The following object(s) are masked from &#39;package:plyr&#39;:
+## 
+## rename, round_any
+</code></pre>
+
 <pre><code class="r">source(&quot;~/Code/energy_projects/func.r&quot;)
 
 inputs &lt;- data.frame(default = c(80, 20, 5, 5, 10, 250, 1e+05, 2))
@@ -265,35 +279,60 @@ ggplot(df.delta10, aes(var.name, delta10)) + geom_bar(stat = &quot;identity&quot
 <h1>Now examine the change in benefits over a range of different inputs</h1>
 
 <pre><code class="r">on.peak.rate.alt &lt;- c(50, 60, 70, 80, 90, 100)
-load.shifting.periods.alt &lt;- c(8, 9, 10, 11)
-expand.grid(on.peak.rate.alt = on.peak.rate.alt, load.shifting.periods.alt = load.shifting.periods.alt)
+load.shift.duration.alt &lt;- c(8, 9, 10, 11)
+
+alt.vars &lt;- expand.grid(on.peak.rate.alt = on.peak.rate.alt, load.shift.duration.alt = load.shift.duration.alt)
+
+for (i in 1:nrow(alt.vars)) {
+    alt.inputs &lt;- inputs
+    alt.inputs[&quot;on.peak.rate&quot;, &quot;default&quot;] &lt;- alt.vars$on.peak.rate.alt[i]
+    alt.inputs[&quot;load.shift.duration&quot;, &quot;default&quot;] &lt;- alt.vars$load.shift.duration.alt[i]
+    alt.vars$benefit[i] &lt;- calc.benefits(alt.inputs)
+}
+alt.vars
 </code></pre>
 
-<pre><code>##    on.peak.rate.alt load.shifting.periods.alt
-## 1                50                         8
-## 2                60                         8
-## 3                70                         8
-## 4                80                         8
-## 5                90                         8
-## 6               100                         8
-## 7                50                         9
-## 8                60                         9
-## 9                70                         9
-## 10               80                         9
-## 11               90                         9
-## 12              100                         9
-## 13               50                        10
-## 14               60                        10
-## 15               70                        10
-## 16               80                        10
-## 17               90                        10
-## 18              100                        10
-## 19               50                        11
-## 20               60                        11
-## 21               70                        11
-## 22               80                        11
-## 23               90                        11
-## 24              100                        11
+<pre><code>##    on.peak.rate.alt load.shift.duration.alt benefit
+## 1                50                       8  800000
+## 2                60                       8  900000
+## 3                70                       8 1000000
+## 4                80                       8 1100000
+## 5                90                       8 1200000
+## 6               100                       8 1300000
+## 7                50                       9  837500
+## 8                60                       9  950000
+## 9                70                       9 1062500
+## 10               80                       9 1175000
+## 11               90                       9 1287500
+## 12              100                       9 1400000
+## 13               50                      10  875000
+## 14               60                      10 1000000
+## 15               70                      10 1125000
+## 16               80                      10 1250000
+## 17               90                      10 1375000
+## 18              100                      10 1500000
+## 19               50                      11  912500
+## 20               60                      11 1050000
+## 21               70                      11 1187500
+## 22               80                      11 1325000
+## 23               90                      11 1462500
+## 24              100                      11 1600000
+</code></pre>
+
+<pre><code class="r">cast(alt.vars, on.peak.rate.alt ~ load.shift.duration.alt)
+</code></pre>
+
+<pre><code>## Using benefit as value column.  Use the value argument to cast to override
+## this choice
+</code></pre>
+
+<pre><code>##   on.peak.rate.alt       8       9      10      11
+## 1               50  800000  837500  875000  912500
+## 2               60  900000  950000 1000000 1050000
+## 3               70 1000000 1062500 1125000 1187500
+## 4               80 1100000 1175000 1250000 1325000
+## 5               90 1200000 1287500 1375000 1462500
+## 6              100 1300000 1400000 1500000 1600000
 </code></pre>
 
 </body>

@@ -21,6 +21,7 @@ Source [here](http://tolstoy.newcastle.edu.au/R/help/05/12/16765.html)
 ```{r}
 require(plyr)
 require(ggplot2)
+require(reshape)
 source('~/Code/energy_projects/func.r')
 
 inputs <-data.frame(
@@ -75,18 +76,18 @@ ggplot(df.delta10, aes(var.name, delta10)) + geom_bar(stat="identity") + coord_f
 
 ```{r}
 on.peak.rate.alt <- c(50,60,70,80,90,100)
-load.shifting.periods.alt <- c(8,9,10,11)
+load.shift.duration.alt <- c(8,9,10,11) 
 
-alt.vars <- expand.grid("on.peak.rate.alt"=on.peak.rate.alt, "load.shifting.periods.alt"=load.shifting.periods.alt)
+alt.vars <- expand.grid("on.peak.rate.alt"=on.peak.rate.alt, "load.shift.duration.alt"=load.shift.duration.alt)
 
 for(i in 1:nrow(alt.vars)){
   alt.inputs <- inputs
   alt.inputs['on.peak.rate','default']  <- alt.vars$on.peak.rate.alt[i]
-  alt.inputs['load.shifting.periods','default']  <- alt.vars$load.shifting.periods.alt[i]
+  alt.inputs['load.shift.duration','default']  <- alt.vars$load.shift.duration.alt[i]
   alt.vars$benefit[i] <- calc.benefits(alt.inputs) 
   }
 alt.vars
-
+cast(alt.vars, on.peak.rate.alt~load.shift.duration.alt)
 ```
 
 
