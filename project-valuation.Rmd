@@ -22,14 +22,22 @@ Source [here](http://tolstoy.newcastle.edu.au/R/help/05/12/16765.html)
 require(plyr)
 require(ggplot2)
 require(reshape)
+require(FME)
+require(xtable)
 source('~/Code/energy_projects/func.r')
+options(scipen=5)
 
+
+percentify <- function(x, r=1, keep.zeros=FALSE){
+         ifelse (as.numeric(x) != 0 | keep.zeros==TRUE,  paste( format(round ( as.numeric(x) * 100, r) , nsmall=r) , '%', sep='') 
+          	,
+        		'')       		
+}
 inputs <-data.frame(
   default=c(
   80,20,5,5,10,250,100000,2
   )
 )
-
 row.names(inputs) <- c(
     'on.peak.rate',
     'off.peak.rate',
@@ -72,9 +80,12 @@ ggplot(df.delta10, aes(var.name, delta10)) + geom_bar(stat="identity") + coord_f
 
 ```
 
-# Now examine the change in benefits over a range of different inputs
+Now examine the change in benefits over a range of different inputs
 
-```{r}
+### Two-Dimensional Data Table, 5MW Energy Storage Example, Total Annual Benefits
+
+
+```{r table.3-1}
 on.peak.rate.alt <- c(50,60,70,80,90,100)
 load.shift.duration.alt <- c(8,9,10,11) 
 
@@ -88,6 +99,104 @@ for(i in 1:nrow(alt.vars)){
   }
 alt.vars
 cast(alt.vars, on.peak.rate.alt~load.shift.duration.alt)
+```
+
+
+### Two-Dimensional Data Table, 10MW Energy Storage Example, Total Annual Benefits
+
+
+
+```{r table.3-2}
+alt.inputs <- inputs
+alt.inputs['capacity','default'] <- 10
+on.peak.rate.alt <- c(50,60,70,80,90,100)
+load.shift.duration.alt <- c(8,9,10,11) 
+
+alt.vars <- expand.grid("on.peak.rate.alt"=on.peak.rate.alt, "load.shift.duration.alt"=load.shift.duration.alt)
+
+for(i in 1:nrow(alt.vars)){
+  alt.inputs['on.peak.rate','default']  <- alt.vars$on.peak.rate.alt[i]
+  alt.inputs['load.shift.duration','default']  <- alt.vars$load.shift.duration.alt[i]
+  alt.vars$benefit[i] <- calc.benefits(alt.inputs) 
+  }
+alt.vars
+cast(alt.vars, on.peak.rate.alt~load.shift.duration.alt)
+```
+
+## Estimating Uncertainty
+
+### Example 2 -- Calculating Total Uncertainty for Energy Storage Annual Savings
+
+#### Table 3-3
+
+#### Nominal Values for Energy Storage Example
+
+```{r table.3.3,results='asis'}
+print(xtable(inputs), type='html') 
+```
+
+
+```{r uncertainty}
+inputs$uncertainty.pct <- c(0.2,0.2,0.2,0.03,0.1,0.1,0.2,.5)
+inputs$uncertainty.abs <- inputs$default * inputs$uncertainty.pct
+inputs$low <- inputs$default - inputs$uncertainty.abs
+inputs$high <- inputs$default + inputs$uncertainty.abs
+
+```
+
+#### Table 3-4
+
+#### Uncertainty Estimates for Energy Storage Example
+```{r table.3.4, results='asis'} 
+print(xtable(inputs), type='html') 
+``` 
+
+
+#### Eq. 3-3
+
+Vary each input by 1% and measure the change in output
+
+```{r kline.mclintock}
+
+alt.inputs <- inputs[,c('default','var.name','uncertainty.abs')]
+
+calc.sensitivity <- function(dat, var, delta) {
+  var.a <- dat[var,'default']
+  result.a <- calc.benefits(dat)
+  dat[var,'default'] <- dat[var,'default'] * delta
+  var.b <- dat[var,'default']
+  result.b <- calc.benefits(dat)
+  ((result.b - result.a) / result.a) / ((var.b - var.a) / var.a) 
+   (result.b - result.a) / (var.b - var.a) 
+}
+
+varied <- ddply(alt.inputs, .(var.name, uncertainty.abs), function(x) c(value=x$default, sensitivity=calc.sensitivity(alt.inputs, x$var.name, 1.01) ))
+varied$km <- (varied$uncertainty.abs * varied$sensitivity)^2
+
+varied
+
+varied <- ddply(varied, .(),  transform, contribution=km/sum(km) )
+varied$contribution.pct <- percentify(varied$contribution)
+
+```
+
+#### Table 3-5
+
+#### Uncertainty Analysis, Energy Storage Example
+
+```{r table.3.5, results='asis'}
+print(xtable(varied), type='html') 
+
+cat('Total Uncertainty: ' , sprintf("$%.0f", sum(varied$km)^.5) )
+
+```
+
+#### Figure 3-3
+
+#### Uncertainty Analysis, Energy Storage System
+```{r figure.3.3}
+ggplot(varied, aes(var.name, contribution)) + geom_bar(stat="identity") + coord_flip() + scale_y_continuous(labels=percent, limits=c(-0.05,1))
+
 ```
 
 
