@@ -4,11 +4,12 @@ percent <- function(x, digits = 2, format = "f", ...)
 }
 
 calc.benefits <- function(input.df){
-  b.energy <- (input.df['on.peak.rate',1] - input.df['off.peak.rate',1]) * input.df['capacity',1] * input.df['load.shift.duration',1] * input.df['load.shifting.periods',1]
+  c <- 'default'
+  b.energy <- (input.df['on.peak.rate',c] - input.df['off.peak.rate',c]) * input.df['capacity',c] * input.df['load.shift.duration',c] * input.df['load.shifting.periods',c]
   
-  b.demand <- input.df['demand.charge',1] * input.df['capacity',1] * 12 * 1000 # 100 is KW to MW
+  b.demand <- input.df['demand.charge',c] * input.df['capacity',c] * 12 * 1000 # 100 is KW to MW
   
-  b.quality <- input.df['cost.per.volt.sag',1] * input.df['volt.sag.count',1]
+  b.quality <- input.df['cost.per.volt.sag',c] * input.df['volt.sag.count',c]
   
   b.total <- b.energy + b.demand + b.quality
   b.total
@@ -28,6 +29,22 @@ exercise <- function(input.df, var.name, offset){
   b.total
   
 }
+
+mc.benefits <- function(dat, iterations){
+  mc.results <- c()
+  dat <- dat[,c('default','var.name','sd')]
+  dat$iteration <- 0
+  for(i in 1:iterations) {
+    mc.dat <-  ddply(dat, .(var.name, default, sd) , function(x) c(mcval=rnorm(1 , x$default, x$sd )))
+    mc.dat$iteration <- i
+    mc.dat$default <- mc.dat$mcval
+    mc.dat$mcval <- NULL
+    row.names(mc.dat) <- mc.dat$var.name
+    mc.results[i] <- calc.benefits(mc.dat)
+  }
+  mc.results
+}
+
 
 
 # http://www.mathepi.com/comp/discounting.html 

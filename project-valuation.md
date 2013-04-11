@@ -28,6 +28,18 @@ require(plyr)
 ```
 
 ```r
+require(pastecs)
+```
+
+```
+## Loading required package: pastecs
+```
+
+```
+## Loading required package: boot
+```
+
+```r
 require(ggplot2)
 ```
 
@@ -85,6 +97,16 @@ require(FME)
 ## Loading required package: lattice
 ```
 
+```
+## Attaching package: 'lattice'
+```
+
+```
+## The following object(s) are masked from 'package:boot':
+## 
+## melanoma
+```
+
 ```r
 require(xtable)
 ```
@@ -102,6 +124,18 @@ percentify <- function(x, r = 1, keep.zeros = FALSE) {
     ifelse(as.numeric(x) != 0 | keep.zeros == TRUE, paste(format(round(as.numeric(x) * 
         100, r), nsmall = r), "%", sep = ""), "")
 }
+
+calc.sensitivity <- function(dat, var, delta) {
+    var.a <- dat[var, "default"]
+    result.a <- calc.benefits(dat)
+    dat[var, "default"] <- dat[var, "default"] * delta
+    var.b <- dat[var, "default"]
+    result.b <- calc.benefits(dat)
+    ((result.b - result.a)/result.a)/((var.b - var.a)/var.a)
+    (result.b - result.a)/(var.b - var.a)
+}
+
+
 inputs <- data.frame(default = c(80, 20, 5, 5, 10, 250, 1e+05, 2))
 row.names(inputs) <- c("on.peak.rate", "off.peak.rate", "demand.charge", "capacity", 
     "load.shift.duration", "load.shifting.periods", "cost.per.volt.sag", "volt.sag.count")
@@ -314,7 +348,7 @@ print(xtable(inputs), type = "html")
 ```
 
 <!-- html table generated in R 2.15.2 by xtable 1.7-0 package -->
-<!-- Wed Mar  6 12:03:01 2013 -->
+<!-- Wed Apr 10 23:35:49 2013 -->
 <TABLE border=1>
 <TR> <TH>  </TH> <TH> default </TH> <TH> var.name </TH>  </TR>
   <TR> <TD align="right"> on.peak.rate </TD> <TD align="right"> 80.00 </TD> <TD> on.peak.rate </TD> </TR>
@@ -347,7 +381,7 @@ print(xtable(inputs), type = "html")
 ```
 
 <!-- html table generated in R 2.15.2 by xtable 1.7-0 package -->
-<!-- Wed Mar  6 12:03:01 2013 -->
+<!-- Wed Apr 10 23:35:49 2013 -->
 <TABLE border=1>
 <TR> <TH>  </TH> <TH> default </TH> <TH> var.name </TH> <TH> uncertainty.pct </TH> <TH> uncertainty.abs </TH> <TH> low </TH> <TH> high </TH>  </TR>
   <TR> <TD align="right"> on.peak.rate </TD> <TD align="right"> 80.00 </TD> <TD> on.peak.rate </TD> <TD align="right"> 0.20 </TD> <TD align="right"> 16.00 </TD> <TD align="right"> 64.00 </TD> <TD align="right"> 96.00 </TD> </TR>
@@ -371,15 +405,7 @@ Vary each input by 1% and measure the change in output
 
 alt.inputs <- inputs[, c("default", "var.name", "uncertainty.abs")]
 
-calc.sensitivity <- function(dat, var, delta) {
-    var.a <- dat[var, "default"]
-    result.a <- calc.benefits(dat)
-    dat[var, "default"] <- dat[var, "default"] * delta
-    var.b <- dat[var, "default"]
-    result.b <- calc.benefits(dat)
-    ((result.b - result.a)/result.a)/((var.b - var.a)/var.a)
-    (result.b - result.a)/(var.b - var.a)
-}
+
 
 varied <- ddply(alt.inputs, .(var.name, uncertainty.abs), function(x) c(value = x$default, 
     sensitivity = calc.sensitivity(alt.inputs, x$var.name, 1.01)))
@@ -417,7 +443,7 @@ print(xtable(varied), type = "html")
 ```
 
 <!-- html table generated in R 2.15.2 by xtable 1.7-0 package -->
-<!-- Wed Mar  6 12:03:01 2013 -->
+<!-- Wed Apr 10 23:35:49 2013 -->
 <TABLE border=1>
 <TR> <TH>  </TH> <TH> .id </TH> <TH> var.name </TH> <TH> uncertainty.abs </TH> <TH> value </TH> <TH> sensitivity </TH> <TH> km </TH> <TH> contribution </TH> <TH> contribution.pct </TH>  </TR>
   <TR> <TD align="right"> 1 </TD> <TD>  </TD> <TD> capacity </TD> <TD align="right"> 0.15 </TD> <TD align="right"> 5.00 </TD> <TD align="right"> 210000.00 </TD> <TD align="right"> 992250000.00 </TD> <TD align="right"> 0.01 </TD> <TD>  1.4% </TD> </TR>
@@ -437,18 +463,184 @@ cat("Total Uncertainty: ", sprintf("$%.0f", sum(varied$km)^0.5))
 
 Total Uncertainty:  $264466
 
-```r
-
-ggplot(varied, aes(var.name, contribution)) + geom_bar(stat = "identity") + 
-    coord_flip() + scale_y_continuous(labels = percent, limits = c(-0.05, 1))
-```
-
-![plot of chunk table.3.5](figure/table.3.5.png) 
-
 
 #### Figure 3-3
 
 #### Uncertainty Analysis, Energy Storage System
+
+```r
+ggplot(varied, aes(var.name, contribution)) + geom_bar(stat = "identity") + 
+    coord_flip() + scale_y_continuous(labels = percent, limits = c(-0.05, 1))
+```
+
+![plot of chunk figure.3.3](figure/figure.3.3.png) 
+
+
+Run the scenario again, with the assumption of 10% uncertainty for On-Peak Energy rate.
+
+#### Table 3-6
+
+#### Uncertainty Analysis Energy Storage Example, Reducing the On-Peak Energy Rate Uncertainty Assumption from +/- 20% to +/- 10%
+
+
+```r
+inputs.b <- inputs
+inputs.b["on.peak.rate", "uncertainty.pct"] <- 0.1
+inputs.b$uncertainty.abs <- inputs.b$default * inputs.b$uncertainty.pct
+
+varied.b <- ddply(inputs.b, .(var.name, uncertainty.abs), function(x) c(value = x$default, 
+    sensitivity = calc.sensitivity(inputs.b, x$var.name, 1.01)))
+
+varied.b$km <- (varied.b$uncertainty.abs * varied.b$sensitivity)^2
+
+varied.b <- ddply(varied.b, .(), transform, contribution = km/sum(km))
+varied.b$contribution.pct <- percentify(varied.b$contribution)
+print(xtable(varied.b), type = "html")
+```
+
+<!-- html table generated in R 2.15.2 by xtable 1.7-0 package -->
+<!-- Wed Apr 10 23:35:49 2013 -->
+<TABLE border=1>
+<TR> <TH>  </TH> <TH> .id </TH> <TH> var.name </TH> <TH> uncertainty.abs </TH> <TH> value </TH> <TH> sensitivity </TH> <TH> km </TH> <TH> contribution </TH> <TH> contribution.pct </TH>  </TR>
+  <TR> <TD align="right"> 1 </TD> <TD>  </TD> <TD> capacity </TD> <TD align="right"> 0.15 </TD> <TD align="right"> 5.00 </TD> <TD align="right"> 210000.00 </TD> <TD align="right"> 992250000.00 </TD> <TD align="right"> 0.02 </TD> <TD>  2.5% </TD> </TR>
+  <TR> <TD align="right"> 2 </TD> <TD>  </TD> <TD> cost.per.volt.sag </TD> <TD align="right"> 20000.00 </TD> <TD align="right"> 100000.00 </TD> <TD align="right"> 2.00 </TD> <TD align="right"> 1600000000.00 </TD> <TD align="right"> 0.04 </TD> <TD>  4.0% </TD> </TR>
+  <TR> <TD align="right"> 3 </TD> <TD>  </TD> <TD> demand.charge </TD> <TD align="right"> 1.00 </TD> <TD align="right"> 5.00 </TD> <TD align="right"> 60000.00 </TD> <TD align="right"> 3600000000.00 </TD> <TD align="right"> 0.09 </TD> <TD>  9.0% </TD> </TR>
+  <TR> <TD align="right"> 4 </TD> <TD>  </TD> <TD> load.shift.duration </TD> <TD align="right"> 1.00 </TD> <TD align="right"> 10.00 </TD> <TD align="right"> 75000.00 </TD> <TD align="right"> 5625000000.00 </TD> <TD align="right"> 0.14 </TD> <TD> 14.1% </TD> </TR>
+  <TR> <TD align="right"> 5 </TD> <TD>  </TD> <TD> load.shifting.periods </TD> <TD align="right"> 25.00 </TD> <TD align="right"> 250.00 </TD> <TD align="right"> 3000.00 </TD> <TD align="right"> 5625000000.00 </TD> <TD align="right"> 0.14 </TD> <TD> 14.1% </TD> </TR>
+  <TR> <TD align="right"> 6 </TD> <TD>  </TD> <TD> off.peak.rate </TD> <TD align="right"> 4.00 </TD> <TD align="right"> 20.00 </TD> <TD align="right"> -12500.00 </TD> <TD align="right"> 2500000000.00 </TD> <TD align="right"> 0.06 </TD> <TD>  6.3% </TD> </TR>
+  <TR> <TD align="right"> 7 </TD> <TD>  </TD> <TD> on.peak.rate </TD> <TD align="right"> 8.00 </TD> <TD align="right"> 80.00 </TD> <TD align="right"> 12500.00 </TD> <TD align="right"> 10000000000.00 </TD> <TD align="right"> 0.25 </TD> <TD> 25.0% </TD> </TR>
+  <TR> <TD align="right"> 8 </TD> <TD>  </TD> <TD> volt.sag.count </TD> <TD align="right"> 1.00 </TD> <TD align="right"> 2.00 </TD> <TD align="right"> 100000.00 </TD> <TD align="right"> 10000000000.00 </TD> <TD align="right"> 0.25 </TD> <TD> 25.0% </TD> </TR>
+   </TABLE>
+
+```r
+
+cat("Total Uncertainty: ", sprintf("$%.0f", sum(varied.b$km)^0.5))
+```
+
+Total Uncertainty:  $199856
+
+
+## 4
+
+## Monte Carlo Modeling
+
+Assign standard deviations to the inputs
+
+```r
+inputs$sd <- (inputs$default * inputs$uncertainty.pct)/2
+```
+
+
+#### Figure 4-1
+
+#### Assumed Probability Distribution, On-Peak Energy Rate
+
+
+```r
+x = seq(56, 104, length = 200)
+y = dnorm(x, mean = 80, sd = 8)
+plot(x, y, type = "l", lwd = 2, col = "red")
+```
+
+![plot of chunk fig.4.1](figure/fig.4.1.png) 
+
+#### Figure 4-2
+
+#### Assumed Probability Distribution, System Size
+
+
+```r
+x = seq(4.775, 5.225, length = 200)
+y = dnorm(x, mean = 5, sd = 0.075)
+plot(x, y, type = "l", lwd = 2, col = "red")
+```
+
+![plot of chunk fig.4.2](figure/fig.4.2.png) 
+
+
+#### Table 4-1
+
+#### Monte Carlo Model Inputs, Energy Storage Example
+
+
+```r
+print(xtable(inputs[, c("var.name", "default", "uncertainty.abs")]), type = "html")
+```
+
+<!-- html table generated in R 2.15.2 by xtable 1.7-0 package -->
+<!-- Wed Apr 10 23:35:49 2013 -->
+<TABLE border=1>
+<TR> <TH>  </TH> <TH> var.name </TH> <TH> default </TH> <TH> uncertainty.abs </TH>  </TR>
+  <TR> <TD align="right"> on.peak.rate </TD> <TD> on.peak.rate </TD> <TD align="right"> 80.00 </TD> <TD align="right"> 16.00 </TD> </TR>
+  <TR> <TD align="right"> off.peak.rate </TD> <TD> off.peak.rate </TD> <TD align="right"> 20.00 </TD> <TD align="right"> 4.00 </TD> </TR>
+  <TR> <TD align="right"> demand.charge </TD> <TD> demand.charge </TD> <TD align="right"> 5.00 </TD> <TD align="right"> 1.00 </TD> </TR>
+  <TR> <TD align="right"> capacity </TD> <TD> capacity </TD> <TD align="right"> 5.00 </TD> <TD align="right"> 0.15 </TD> </TR>
+  <TR> <TD align="right"> load.shift.duration </TD> <TD> load.shift.duration </TD> <TD align="right"> 10.00 </TD> <TD align="right"> 1.00 </TD> </TR>
+  <TR> <TD align="right"> load.shifting.periods </TD> <TD> load.shifting.periods </TD> <TD align="right"> 250.00 </TD> <TD align="right"> 25.00 </TD> </TR>
+  <TR> <TD align="right"> cost.per.volt.sag </TD> <TD> cost.per.volt.sag </TD> <TD align="right"> 100000.00 </TD> <TD align="right"> 20000.00 </TD> </TR>
+  <TR> <TD align="right"> volt.sag.count </TD> <TD> volt.sag.count </TD> <TD align="right"> 2.00 </TD> <TD align="right"> 1.00 </TD> </TR>
+   </TABLE>
+
+
+Run multiple iterations across the input distributions
+
+#### Figure 4-3
+#### Monte Carlo Simulation, Frequency Distribution for Total Annual Benefits
+
+
+```r
+
+mc.results <- mc.benefits(inputs, 5000)
+
+t.test(mc.results, conf.level = 0.95)
+```
+
+```
+## 
+## 	One Sample t-test
+## 
+## data:  mc.results 
+## t = 659, df = 4999, p-value < 2.2e-16
+## alternative hypothesis: true mean is not equal to 0 
+## 95 percent confidence interval:
+##  1246858 1254299 
+## sample estimates:
+## mean of x 
+##   1250578
+```
+
+```r
+
+hist(mc.results, freq = FALSE, breaks = 50)
+```
+
+![plot of chunk mc.inputs](figure/mc.inputs.png) 
+
+```r
+data.frame(stat.desc(mc.results))
+```
+
+```
+##              stat.desc.mc.results.
+## nbr.val                  5.000e+03
+## nbr.null                 0.000e+00
+## nbr.na                   0.000e+00
+## min                      8.021e+05
+## max                      1.780e+06
+## range                    9.784e+05
+## sum                      6.253e+09
+## median                   1.247e+06
+## mean                     1.251e+06
+## SE.mean                  1.898e+03
+## CI.mean.0.95             3.721e+03
+## var                      1.801e+10
+## std.dev                  1.342e+05
+## coef.var                 1.073e-01
+```
+
+```r
+
+```
 
 
 
