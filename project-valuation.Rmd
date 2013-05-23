@@ -35,16 +35,6 @@ percentify <- function(x, r=1, keep.zeros=FALSE){
         		'')       		
 }
 
-calc.sensitivity <- function(dat, var, delta) {
-  var.a <- dat[var,'default']
-  result.a <- calc.benefits(dat)
-  dat[var,'default'] <- dat[var,'default'] * delta
-  var.b <- dat[var,'default']
-  result.b <- calc.benefits(dat)
-  ((result.b - result.a) / result.a) / ((var.b - var.a) / var.a) 
-   (result.b - result.a) / (var.b - var.a) 
-}
-
 
 inputs <-data.frame(
   default=c(
@@ -268,6 +258,7 @@ Run multiple iterations across the input distributions
 
 #### Figure 4-3
 #### Monte Carlo Simulation, Frequency Distribution for Total Annual Benefits
+Corresponds to Figures 4-3 and 4-4 in the source document
 
 ```{r mc.inputs}
 
@@ -278,6 +269,19 @@ t.test(mc.results, conf.level=0.95)
 hist(mc.results, freq=FALSE, breaks=50)
 data.frame(stat.desc(mc.results))
 
+# Uncertainty:
+cat(
+    '$', format(stat.desc(mc.results)['std.dev'] * 2 , nsmall = 2, big.mark=',')
+    ,sep='')
+
+
+varied.mc <- ddply(inputs, .(var.name, uncertainty.abs), function(x) c(value=x$default, sensitivity=calc.sensitivity.mc(inputs, x$var.name, 1.01, 5000) ))
+
+varied.mc$km <- (varied.mc$uncertainty.abs * varied.mc$sensitivity)^2
+varied.mc <- ddply(varied.mc, .(),  transform, contribution=km/sum(km) )
+varied.mc$contribution.pct <- percentify(varied.mc$contribution)
+
+varied.mc[,c('var.name','contribution.pct')]
 
 ```
 

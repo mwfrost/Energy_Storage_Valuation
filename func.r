@@ -15,6 +15,16 @@ calc.benefits <- function(input.df){
   b.total
 }
 
+calc.sensitivity <- function(dat, var, delta) {
+  var.a <- dat[var,'default']
+  result.a <- calc.benefits(dat)
+  dat[var,'default'] <- dat[var,'default'] * delta
+  var.b <- dat[var,'default']
+  result.b <- calc.benefits(dat)
+  ((result.b - result.a) / result.a) / ((var.b - var.a) / var.a) 
+  (result.b - result.a) / (var.b - var.a) 
+}
+
 
 exercise <- function(input.df, var.name, offset){
   input.df[var.name,1] <- input.df[var.name,1] * offset
@@ -45,6 +55,15 @@ mc.benefits <- function(dat, iterations){
   mc.results
 }
 
+calc.sensitivity.mc <- function(dat, var, delta, iterations) {
+  var.a <- dat[var,'default']
+  result.a <- mc.benefits(dat, iterations)
+  dat[var,'default'] <- dat[var,'default'] * delta
+  var.b <- dat[var,'default']
+  result.b <- mc.benefits(dat, iterations)
+  ((result.b - result.a) / result.a) / ((var.b - var.a) / var.a) 
+  mean( (result.b - result.a) / (var.b - var.a)  )
+}
 
 
 # http://www.mathepi.com/comp/discounting.html 

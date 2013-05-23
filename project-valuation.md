@@ -348,7 +348,7 @@ print(xtable(inputs), type = "html")
 ```
 
 <!-- html table generated in R 2.15.2 by xtable 1.7-0 package -->
-<!-- Wed Apr 10 23:35:49 2013 -->
+<!-- Wed May 22 22:55:29 2013 -->
 <TABLE border=1>
 <TR> <TH>  </TH> <TH> default </TH> <TH> var.name </TH>  </TR>
   <TR> <TD align="right"> on.peak.rate </TD> <TD align="right"> 80.00 </TD> <TD> on.peak.rate </TD> </TR>
@@ -381,7 +381,7 @@ print(xtable(inputs), type = "html")
 ```
 
 <!-- html table generated in R 2.15.2 by xtable 1.7-0 package -->
-<!-- Wed Apr 10 23:35:49 2013 -->
+<!-- Wed May 22 22:55:29 2013 -->
 <TABLE border=1>
 <TR> <TH>  </TH> <TH> default </TH> <TH> var.name </TH> <TH> uncertainty.pct </TH> <TH> uncertainty.abs </TH> <TH> low </TH> <TH> high </TH>  </TR>
   <TR> <TD align="right"> on.peak.rate </TD> <TD align="right"> 80.00 </TD> <TD> on.peak.rate </TD> <TD align="right"> 0.20 </TD> <TD align="right"> 16.00 </TD> <TD align="right"> 64.00 </TD> <TD align="right"> 96.00 </TD> </TR>
@@ -443,7 +443,7 @@ print(xtable(varied), type = "html")
 ```
 
 <!-- html table generated in R 2.15.2 by xtable 1.7-0 package -->
-<!-- Wed Apr 10 23:35:49 2013 -->
+<!-- Wed May 22 22:55:29 2013 -->
 <TABLE border=1>
 <TR> <TH>  </TH> <TH> .id </TH> <TH> var.name </TH> <TH> uncertainty.abs </TH> <TH> value </TH> <TH> sensitivity </TH> <TH> km </TH> <TH> contribution </TH> <TH> contribution.pct </TH>  </TR>
   <TR> <TD align="right"> 1 </TD> <TD>  </TD> <TD> capacity </TD> <TD align="right"> 0.15 </TD> <TD align="right"> 5.00 </TD> <TD align="right"> 210000.00 </TD> <TD align="right"> 992250000.00 </TD> <TD align="right"> 0.01 </TD> <TD>  1.4% </TD> </TR>
@@ -499,7 +499,7 @@ print(xtable(varied.b), type = "html")
 ```
 
 <!-- html table generated in R 2.15.2 by xtable 1.7-0 package -->
-<!-- Wed Apr 10 23:35:49 2013 -->
+<!-- Wed May 22 22:55:29 2013 -->
 <TABLE border=1>
 <TR> <TH>  </TH> <TH> .id </TH> <TH> var.name </TH> <TH> uncertainty.abs </TH> <TH> value </TH> <TH> sensitivity </TH> <TH> km </TH> <TH> contribution </TH> <TH> contribution.pct </TH>  </TR>
   <TR> <TD align="right"> 1 </TD> <TD>  </TD> <TD> capacity </TD> <TD align="right"> 0.15 </TD> <TD align="right"> 5.00 </TD> <TD align="right"> 210000.00 </TD> <TD align="right"> 992250000.00 </TD> <TD align="right"> 0.02 </TD> <TD>  2.5% </TD> </TR>
@@ -568,7 +568,7 @@ print(xtable(inputs[, c("var.name", "default", "uncertainty.abs")]), type = "htm
 ```
 
 <!-- html table generated in R 2.15.2 by xtable 1.7-0 package -->
-<!-- Wed Apr 10 23:35:49 2013 -->
+<!-- Wed May 22 22:55:29 2013 -->
 <TABLE border=1>
 <TR> <TH>  </TH> <TH> var.name </TH> <TH> default </TH> <TH> uncertainty.abs </TH>  </TR>
   <TR> <TD align="right"> on.peak.rate </TD> <TD> on.peak.rate </TD> <TD align="right"> 80.00 </TD> <TD align="right"> 16.00 </TD> </TR>
@@ -600,13 +600,13 @@ t.test(mc.results, conf.level = 0.95)
 ## 	One Sample t-test
 ## 
 ## data:  mc.results 
-## t = 659, df = 4999, p-value < 2.2e-16
+## t = 671, df = 4999, p-value < 2.2e-16
 ## alternative hypothesis: true mean is not equal to 0 
 ## 95 percent confidence interval:
-##  1246858 1254299 
+##  1248006 1255320 
 ## sample estimates:
 ## mean of x 
-##   1250578
+##   1251663
 ```
 
 ```r
@@ -625,17 +625,17 @@ data.frame(stat.desc(mc.results))
 ## nbr.val                  5.000e+03
 ## nbr.null                 0.000e+00
 ## nbr.na                   0.000e+00
-## min                      8.021e+05
-## max                      1.780e+06
-## range                    9.784e+05
-## sum                      6.253e+09
-## median                   1.247e+06
-## mean                     1.251e+06
-## SE.mean                  1.898e+03
-## CI.mean.0.95             3.721e+03
-## var                      1.801e+10
-## std.dev                  1.342e+05
-## coef.var                 1.073e-01
+## min                      8.084e+05
+## max                      1.893e+06
+## range                    1.084e+06
+## sum                      6.258e+09
+## median                   1.249e+06
+## mean                     1.252e+06
+## SE.mean                  1.865e+03
+## CI.mean.0.95             3.657e+03
+## var                      1.740e+10
+## std.dev                  1.319e+05
+## coef.var                 1.054e-01
 ```
 
 ```r
